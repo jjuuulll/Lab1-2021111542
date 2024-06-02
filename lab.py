@@ -247,6 +247,7 @@ if __name__ == '__main__':
         graph_matrix[words_to_id[x]][words_to_id[y]]+=1
     
     while(True):
+        print("hi")
     
         case = int(input("choose(show:1,query:2,generate:3,calculate:4,random:5):"))
         
