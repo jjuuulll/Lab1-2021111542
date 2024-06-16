@@ -5,13 +5,14 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import random
 
-# words_list=[]
-# words_to_id={}
-# id_to_words={}
-# global graph_matrix
+words_list=[]
+words_to_id={}
+id_to_words={}
+global graph_matrix
 
     
 def showDirectedGraph(id_to_words, path=None, distance=None, show_path=False):
+    
     
     G = nx.from_numpy_array(graph_matrix, create_using=nx.DiGraph)
     H = nx.relabel_nodes(G, id_to_words)
@@ -39,8 +40,6 @@ def showDirectedGraph(id_to_words, path=None, distance=None, show_path=False):
     plt.show()
 
 def queryBridgeWords(word1,word2,default=False):
-    
-    graph_matrix,words_to_id,id_to_words,length,num = init()
        
     if word1 not in words_to_id and word2 not in words_to_id:
         if default:
@@ -135,9 +134,7 @@ def randomWalk():
         out_sentence += (i+" ")
     return out_sentence.strip()
     
-def dijkstra_all(src,num):
-    graph_matrix,words_to_id,id_to_words,length,num = init()
-    # src=words_to_id[word1]
+def dijkstra_all(src, num):
     new_matrix=np.copy(graph_matrix)
     #np.fill_diagonal(new_matrix, -np.inf)
     new_matrix[new_matrix == 0] = np.inf
@@ -180,8 +177,7 @@ def dijkstra_all(src,num):
 
     return distances, all_paths
 
-def calcShortestPath(word1,word2,one_word,show_all):
-    graph_matrix,words_to_id,id_to_words,length,num = init()
+def calcShortestPath(num,word1,word2,one_word,show_all):
     u=words_to_id[word1]
     distances,all_paths=dijkstra_all(u,num)
     print(all_paths)
@@ -189,61 +185,59 @@ def calcShortestPath(word1,word2,one_word,show_all):
         if show_all:
             for paths,dist in zip(all_paths,distances):
                 if all_paths[paths]==[]:
-                    return f"It's impossible to reach {id_to_words[paths]} from {word1}"
+                    print(f"It's impossible to reach {id_to_words[paths]} from {word1}")
                 else:
-                    print(all_paths[paths])
-            return "show_all_one_word"
+                    for path in all_paths[paths]:
+                        showDirectedGraph(id_to_words,path,dist,True)
+            return 
         else:
             for paths,dist in zip(all_paths,distances):
                 if all_paths[paths]==[]:
-                    return f"It's impossible to reach {id_to_words[paths]} from {word1}"
+                    print(f"It's impossible to reach {id_to_words[paths]} from {word1}")
                 else:
-                    print(all_paths[paths][0])
-            return "show_one_one_word"
+                    showDirectedGraph(id_to_words,all_paths[paths][0],dist,True)
+            return
     else:
         v=words_to_id[word2]
         dist=distances[v]
         paths=all_paths[v]
         if paths==[]:
-            return f"It's impossible to reach {word2} from {word1}"
+            print(f"It's impossible to reach {word2} from {word1}")
+            return 
         if show_all:
-            return "show_all_two_words"
+            for path in paths:
+                showDirectedGraph(id_to_words,path,dist,True)
+            return
         else:
-            return  "show_one_two_words"
+            showDirectedGraph(id_to_words,paths[0],dist,True)
+            return   
         
     
 def load_data(file_path):
-    words_list = []
+    global words_list
     with open(file_path, 'r') as file:
         text = file.read().lower()  
         words_list = re.findall(r'\b\w+\b', text)
     length=len(words_list)
     idx=0
-    
-    words_to_id={}
-    id_to_words={}
-    
     for i in words_list:
         if i not in words_to_id:
             words_to_id[i]=idx
             id_to_words[idx]=i
             idx+=1
-    return length,idx,words_to_id,id_to_words,words_list
+    return length,idx
 
 def get_args_parser():
     parser = argparse.ArgumentParser('LAB1', add_help=False)
-    parser.add_argument('--file_path', default="text2.txt", type=str)
+    parser.add_argument('--file_path', default="text.txt", type=str)
     return parser
         
-        
-        
-        
-def init():
+if __name__ == '__main__':
     args = get_args_parser()
     args = args.parse_args()
     if not args.file_path:
         args.file_path=input("please input your file path:")
-    length,num,words_to_id,id_to_words,words_list = load_data(args.file_path)
+    length,num = load_data(args.file_path)
     
     graph_matrix=np.zeros((num,num))
 
@@ -251,48 +245,41 @@ def init():
         x=words_list[i]
         y=words_list[i+1]
         graph_matrix[words_to_id[x]][words_to_id[y]]+=1
-    return graph_matrix,words_to_id,id_to_words,length,num
-        
-# out = calcShortestPath("to",None,1,1)
-# print(out)
-# if __name__ == '__main__':
-#     args = get_args_parser()
-#     args = args.parse_args()
-#     if not args.file_path:
-#         args.file_path=input("please input your file path:")
-#     length,num = load_data(args.file_path)
     
-#     graph_matrix=np.zeros((num,num))
+    while(True):
+        print("hi")
+        print("choose a number")
+    
+        case = int(input("choose(show:1,query:2,generate:3,calculate:4,random:5):"))
+        
+        # sentence = "Seek to explore new and exciting synergies"
+        # print(generateNewText(sentence))
+        if case==1:
+            showDirectedGraph(id_to_words)
+        if case==2:
+            word1 = input("word1:").lower()
+            word2 = input("word2:").lower()
+            print(queryBridgeWords(word1,word2))
+        if case==3:
+            sentence = input("sentence:")
+            print(generateNewText(sentence))
+        if case==4:
+            one_word=bool(input("one_word:"))
+            word1 = input("begin:").lower()
+            if not one_word:
+                word2 = input("end:").lower()
+            show_all=bool(input("show_all:"))
+            if not one_word:
+                calcShortestPath(num,word1,word2,one_word,show_all)
+            else:
+                calcShortestPath(num,word1,"",one_word,show_all)
+        if case==5:
+            print(randomWalk())
 
-#     for i in range(length-1):
-#         x=words_list[i]
-#         y=words_list[i+1]
-#         graph_matrix[words_to_id[x]][words_to_id[y]]+=1
+
     
-    # while(True):
     
-    #     case = int(input("choose(show:1,query:2,generate:3,calculate:4,random:5):"))
+
+    
         
-    #     # sentence = "Seek to explore new and exciting synergies"
-    #     # print(generateNewText(sentence))
-    #     if case==1:
-    #         showDirectedGraph(id_to_words)
-    #     if case==2:
-    #         word1 = input("word1:").lower()
-    #         word2 = input("word2:").lower()
-    #         print(queryBridgeWords(word1,word2))
-    #     if case==3:
-    #         sentence = input("sentence:")
-    #         print(generateNewText(sentence))
-    #     if case==4:
-    #         one_word=bool(input("one_word:"))
-    #         word1 = input("begin:").lower()
-    #         if not one_word:
-    #             word2 = input("end:").lower()
-    #         show_all=bool(input("show_all:"))
-    #         if not one_word:
-    #             calcShortestPath(num,word1,word2,one_word,show_all)
-    #         else:
-    #             calcShortestPath(num,word1,"",one_word,show_all)
-    #     if case==5:
-    #         print(randomWalk())
+
